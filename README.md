@@ -287,4 +287,16 @@ ingress-nginx-controller-admission   ClusterIP   10.108.69.124   <none>        4
 ![alt text](image.png)
 
 ```
-
+## 02.4 for monitoring
+``` bash
+##### Monitoring Stack
+I would recommend prometheus monitoring
+Prometheus	Collect metrics from Kubernetes and Juice Shop
+Alertmanager	Send alerts when thresholds are exceeded
+Grafana	Dashboards and visualization
+kube-state-metrics	Kubernetes object metrics
+Node Exporter	Node CPU, memory, disk metrics
+cAdvisor	Container CPU, memory, filesystem metrics
+Loki	Centralized application logs
+Promtail	Collect logs from pods and send them to Loki
+```
