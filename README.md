@@ -148,6 +148,143 @@ NAME      STATUS   ROLES           AGE   VERSION
 master    Ready    control-plane   55m   v1.35.10
 worker1   Ready    <none>          47m   v1.35.10
 root@master:~#
+```
+## 02.2 Access to kubernetes API is restricted to specific IP addresses.
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+sudo ufw allow 22/tcp
+sudo ufw allow from <ip_or_subnet> to any port 6443 proto tcp
+
+sudo ufw enable
+```
+## 02.3 prepare juice-shop deployment
+```yaml
+# 01 check from dockerhub the image https://hub.docker.com/r/bkimminich/juice-shop
+# 02 create the deployment and service
+root@master:~# cat juice-shop.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: juice-shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: juice-shop
+  template:
+    metadata:
+      labels:
+        app: juice-shop
+    spec:
+      containers:
+      - name: juice-shop
+        #image: bkimminich/juice-shop:latest
+        image: bkimminich/juice-shop:v20.4.0
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: juice-shop
+spec:
+  selector:
+    app: juice-shop
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP
+
+# 04 apply it
+root@master:~# kubectl apply -f juice-shop.yaml
+root@master:~# k get all
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/juice-shop-7d874b9754-s2ttb   1/1     Running   0          3m51s
+
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/juice-shop   ClusterIP   10.99.20.48   <none>        80/TCP    3m51s
+service/kubernetes   ClusterIP   10.96.0.1     <none>        443/TCP   84m
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/juice-shop   1/1     1            1           3m51s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/juice-shop-7d874b9754   1         1         1       3m51s
+
+# 05 install ingress
+root@master:~# kubectl apply -f \
+https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+# 06 this step  for local Multipass environments so NodePort traffic is forwarded to the node hosting the ingress controller.
+
+kubectl patch svc ingress-nginx-controller \
+  -n ingress-nginx \
+  -p '{"spec":{"externalTrafficPolicy":"Cluster"}}'
+# 07 create ingress file
+root@master:~# cat juice-shop-ingress.yaml 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: juice-shop-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: juice-shop.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: juice-shop
+            port:
+              number: 80
+
+# 08 create the ingress
+root@master:~# kubectl apply -f juice-shop-ingress.yaml
+root@master:~# k get ingress
+NAME                 CLASS   HOSTS              ADDRESS         PORTS   AGE
+juice-shop-ingress   nginx   juice-shop.local   10.104.35.197   80      67m
+
+# 09 configure kubectl my  MAC
+mkdir -p ~/.kube
+
+multipass exec master -- \
+sudo cat /etc/kubernetes/admin.conf > ~/.kube/config
+
+# 10 Verify the cluster
+┌─[haytham@Haythams-MacBook-Pro]─[~]
+└─➜ kubectl get node
+NAME      STATUS   ROLES           AGE   VERSION
+master    Ready    control-plane   87m   v1.35.10
+worker1   Ready    <none>          79m   v1.35.10
+
+# 11 add this entry at mac /etc/hosts
+┌─[haytham@Haythams-MacBook-Pro]─[~]
+└─➜ cat /etc/hosts 
+##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1       localhost
+255.255.255.255 broadcasthost
+::1             localhost
+192.168.252.2 juice-shop.local
+
+# get the node port for ingress http (31299)
+┌─[haytham@Haythams-MacBook-Pro]─[~]
+└─➜ k -n ingress-nginx get svc
+NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+ingress-nginx-controller             NodePort    10.104.35.197   <none>        80:31299/TCP,443:30363/TCP   77m
+ingress-nginx-controller-admission   ClusterIP   10.108.69.124   <none>        443/TCP                      77m
+
+# now you can access the app => http://juice-shop.local:31299
+<img width="1164" height="525" alt="image" src="https://github.com/user-attachments/assets/4ac4484e-6925-4b51-b2fd-59bf63e7f374" />
 
 
 ```
+
