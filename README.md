@@ -1,9 +1,9 @@
 # Haytham-DevOps-GitOps-Task
-## 01 script
+# 01 script
 
 
-## 02 k8s task
-### created on master and one worker on my mac using multipass
+# 02 k8s task
+## 02.1 created on master and one worker on my mac using multipass
 
 ```bash
 # 01 on the mac install multipass
