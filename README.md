@@ -283,8 +283,8 @@ ingress-nginx-controller             NodePort    10.104.35.197   <none>        8
 ingress-nginx-controller-admission   ClusterIP   10.108.69.124   <none>        443/TCP                      77m
 
 # now you can access the app => http://juice-shop.local:31299
-<img width="1164" height="525" alt="image" src="https://github.com/user-attachments/assets/4ac4484e-6925-4b51-b2fd-59bf63e7f374" />
 
+![alt text](image.png)
 
 ```
 
