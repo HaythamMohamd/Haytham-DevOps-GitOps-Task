@@ -477,3 +477,15 @@ deploy_staging:
 
 ```
 <img width="1223" height="687" alt="image" src="https://github.com/user-attachments/assets/8518c7a1-d010-4efd-b044-6ce376d3ec4a" />
+
+```bash
+## it will not work as the image not correct, so we can put manual or the best way use gitops, argocd or flux-cd
+┌─[haytham@Haythams-MacBook-Pro]─[~]
+└─➜ k get pod
+NAME                             READY   STATUS             RESTARTS   AGE
+ecommerce-app-584fccb7d8-d4c98   0/1     ImagePullBackOff   0          16s
+ecommerce-app-584fccb7d8-dpf4f   0/1     ErrImagePull       0          16s
+juice-shop-7d874b9754-s2ttb      1/1     Running            0          25h
+┌─[haytham@Haythams-MacBook-Pro]─[~]
+└─➜ 
+```
