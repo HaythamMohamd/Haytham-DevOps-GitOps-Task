@@ -326,3 +326,9 @@ ENTRYPOINT ["newman"]
 
 root@master:~/docker-postmane# 
 ```
+
+## 04 gitlab CI/CD
+```yml
+
+```
+<img width="1223" height="687" alt="image" src="https://github.com/user-attachments/assets/8518c7a1-d010-4efd-b044-6ce376d3ec4a" />
