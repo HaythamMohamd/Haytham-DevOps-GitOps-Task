@@ -328,6 +328,9 @@ root@master:~/docker-postmane#
 ```
 
 ## 04 gitlab CI/CD
+```bash
+gitlab repo: https://gitlab.com/my-demo-group9854105/Django-Ecommerce.git
+```
 ### 04.1 Dockerfile
 ```yml
 FROM python:3.8-bullseye
