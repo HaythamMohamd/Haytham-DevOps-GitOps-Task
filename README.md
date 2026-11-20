@@ -539,3 +539,110 @@ juice-shop-7d874b9754-s2ttb      1/1     Running            0          25h
 ┌─[haytham@Haythams-MacBook-Pro]─[~]
 └─➜ 
 ```
+
+# 05 flux-cd 
+```yml
+## 05.1 install flux cli
+root@master:~/gitops-fluxcd# curl -s https://fluxcd.io/install.sh | sudo bash
+[INFO]  Downloading metadata https://api.github.com/repos/fluxcd/flux2/releases/latest
+[INFO]  Using 2.10.0 as release
+[INFO]  Downloading hash https://github.com/fluxcd/flux2/releases/download/v2.10.0/flux_2.10.0_checksums.txt
+[INFO]  Downloading binary https://github.com/fluxcd/flux2/releases/download/v2.10.0/flux_2.10.0_linux_arm64.tar.gz
+[INFO]  Verifying binary download
+[INFO]  Installing flux to /usr/local/bin/flux
+
+## 05.2 create a project on gitlab with fluxgitops and create these dirs (flux-config/clusters/my-cluster)
+link repo: https://gitlab.com/my-demo-group9854105/fluxgitops.git
+
+## 05.3 bootstrap 
+flux bootstrap gitlab   --owner=my-demo-group9854105   --repository=fluxgitops   --branch=main   --path=flux-config/clusters/my-cluster   --components-extra=image-reflector-controller,image-automation-controller   --visibility=private
+
+
+## 05.3 as shown flux should create flux system dir, creat the apps/web-app dir then create the deployment, the create web-app-kustomization.yaml
+
+root@master:~/fluxgitops# tree
+.
+├── README.md
+├── apps
+│   └── web-app
+│       └── deployment.yaml
+└── flux-config
+    └── clusters
+        └── my-cluster
+            ├── flux-system
+            │   ├── gotk-components.yaml
+            │   ├── gotk-sync.yaml
+            │   └── kustomization.yaml
+            └── web-app-kustomization.yaml
+
+## if change in the deployment, automatic flux will apply the change to cluster
+root@master:~/fluxgitops# cat apps/web-app/deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-app
+  namespace: default
+  labels:
+    app: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce
+  template:
+    metadata:
+      labels:
+        app: ecommerce
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-credential
+      containers:
+        - name: ecommerce
+          image: docker.io/haytham1992/ecommerce:34
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_HOST
+              value: database-service
+            - name: DATABASE_NAME
+              value: ecommerce
+            - name: DATABASE_USER
+              value: admin
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-db
+                  key: DATABASE_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-service
+  namespace: default
+spec:
+  selector:
+    app: ecommerce
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
+
+########### web-app-kustomization.yaml
+root@master:~/fluxgitops# cat flux-config/clusters/my-cluster/web-app-kustomization.yaml 
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: web-app
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./apps/web-app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+root@master:~/fluxgitops# 
+
+
+```
