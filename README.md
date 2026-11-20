@@ -644,5 +644,6 @@ spec:
     name: flux-system
 root@master:~/fluxgitops# 
 
+<img width="983" height="665" alt="image" src="https://github.com/user-attachments/assets/3798020b-2e32-46b6-9845-4dd6298bde38" />
 
 ```
