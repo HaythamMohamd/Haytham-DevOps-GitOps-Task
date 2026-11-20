@@ -1,6 +1,56 @@
 # Haytham-DevOps-GitOps-Task
 # 01 script
+```bash
+## 01.1 the data.txt
+name, email, id
+John, john_j123@domain.com, 325
+Susan, ,510
+Menna, menna_ka234@domain.com
+Magdy, magdy_mm23@localhost, 150
+Jake, jake_j121@domain.com, 131
 
+## 01.2 the script
+root@master:~/script# cat scitpt.sh 
+#!/bin/bash
+
+# begin with the line number 2 and make while loop for the line
+tail -n +2 data.txt | while read line; do
+
+    # cut the field number 2 from the line and delete the spaces and save the rsult at email variable
+    email=$(echo "$line" | cut -d',' -f2 | tr -d ' ')
+    # cut the field number 3 from the line and delete the spaces and save the rsult at email variable
+    id=$(echo "$line" | cut -d',' -f3 | tr -d ' ')
+    
+    # will check the id and bad id will skip this line 
+    if [[ ! $id =~ ^[0-9]+$ ]]; then
+        echo "Warning: Invalid user_id -> $id"
+        continue
+    fi
+
+    # will check the email and bad id will skip this line 
+    if [[ $email != *@*.* ]]; then
+        echo "Warning: Invalid Email -> $email"
+        continue
+    fi
+
+    # will check it id is even or odd
+    if (( id % 2 == 0 )); then
+        echo "the $id of $email is even number"
+    else
+        echo "the $id of $email is odd number"
+    fi
+done
+
+
+## 01.3 result
+root@master:~/script# ./scitpt.sh data.txt 
+the 325 of john_j123@domain.com is odd number
+Warning: Invalid Email -> 
+Warning: Invalid user_id -> 
+Warning: Invalid Email -> magdy_mm23@localhost
+the 131 of jake_j121@domain.com is odd number
+root@master:~/script# 
+```
 
 # 02 k8s task
 ## 02.1 created on master and one worker on my mac using multipass
