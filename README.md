@@ -66,7 +66,7 @@ root@master:~/script#
 multipmultipass launch 22.04 --name master --cpus 2 --memory 4G --disk 20G
 
 # 04 create  worker VM
-multipmultipass launch 22.04 --name master --cpus 2 --memory 4G --disk 20G
+multipmultipass launch 22.04 --name worker1 --cpus 2 --memory 4G --disk 20G
 
 # 05 check the VMs
 └─➜ multipass list
