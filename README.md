@@ -554,7 +554,7 @@ root@master:~/gitops-fluxcd# curl -s https://fluxcd.io/install.sh | sudo bash
 ## 05.2 create a project on gitlab with fluxgitops and create these dirs (flux-config/clusters/my-cluster)
 link repo: https://gitlab.com/my-demo-group9854105/fluxgitops.git
 
-## 05.3 bootstrap 
+## 05.3 create a token from gitlab then do bootstrap command 
 flux bootstrap gitlab   --owner=my-demo-group9854105   --repository=fluxgitops   --branch=main   --path=flux-config/clusters/my-cluster   --components-extra=image-reflector-controller,image-automation-controller   --visibility=private
 
 
