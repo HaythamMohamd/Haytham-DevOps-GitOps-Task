@@ -644,6 +644,130 @@ spec:
     name: flux-system
 root@master:~/fluxgitops# 
 
-<img width="983" height="665" alt="image" src="https://github.com/user-attachments/assets/3798020b-2e32-46b6-9845-4dd6298bde38" />
+```
+# 06 create these three files (image-policy.yaml, image-repository.yaml and image-update.yaml) 
+root@master:~/fluxgitops# tree 
+.
+├── README.md
+├── apps
+│   └── web-app
+│       ├── deployment.yaml
+│       ├── image-policy.yaml
+│       ├── image-repository.yaml
+│       └── image-update.yaml
+└── flux-config
+    └── clusters
+        └── my-cluster
+            ├── flux-system
+            │   ├── gotk-components.yaml
+            │   ├── gotk-sync.yaml
+            │   └── kustomization.yaml
+            └── web-app-kustomization.yaml
 
+6 directories, 9 files
+```
+# 06.1 create image-policy.yaml
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: django-ecommerce
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: django-ecommerce
+  policy:
+    numerical:
+      order: asc
+
+# 6.2 image-repository.yaml
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: django-ecommerce
+  namespace: flux-system
+spec:
+  image: docker.io/haytham1992/django-ecommerce
+  interval: 1m
+  secretRef:
+    name: dockerhub-credential
+
+# 6.4 create docker secret
+kubectl -n flux-system create secret docker-registry dockerhub-credential  --docker-username="haytham.mo7amed@gmail.com"   --docker-password="xxxx"   --docker-server=https://index.docker.io/v1/
+
+# 6.3 image-update.yaml
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: django-ecommerce
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcd@example.com
+        name: Flux
+      messageTemplate: |
+         Update ecommerce image to {{range .Changed.Changes}}{{.NewValue}}{{end}}
+    push:
+      branch: main
+  update:
+    path: ./apps/web-app
+    strategy: Setters
+
+# 6.4 add this ({"$imagepolicy": "flux-system:django-ecommerce"}) to the image deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-app
+  namespace: default
+  labels:
+    app: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce
+  template:
+    metadata:
+      labels:
+        app: ecommerce
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-credential
+      containers:
+        - name: ecommerce
+          image: docker.io/haytham1992/django-ecommerce:40 # {"$imagepolicy": "flux-system:django-ecommerce"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_HOST
+              value: database-service
+            - name: DATABASE_NAME
+              value: ecommerce
+            - name: DATABASE_USER
+              value: "admin"
+            - name: DATABASE_PASSWORD
+              value: "password"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-service
+  namespace: default
+spec:
+  selector:
+    app: ecommerce
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
+  
 ```
