@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-app
+  namespace: default
+  labels:
+    app: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce
+  template:
+    metadata:
+      labels:
+        app: ecommerce
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-credential
+      containers:
+        - name: ecommerce
+          image: docker.io/haytham1992/django-ecommerce:40 # {"$imagepolicy": "flux-system:django-ecommerce"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_HOST
+              value: database-service
+            - name: DATABASE_NAME
+              value: ecommerce
+            - name: DATABASE_USER
+              value: "admin"
+            - name: DATABASE_PASSWORD
+              value: "password"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-service
+  namespace: default
+spec:
+  selector:
+    app: ecommerce
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
+
